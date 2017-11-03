@@ -10,7 +10,7 @@
  */
 namespace woocommerce;
 
-defined( 'ABSPATH' ) or exit;
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Product Retailers Admin Edit Screen
@@ -30,7 +30,7 @@ class Product_Downloads_Edit {
 	 *
 	 * @since 1.0.0
 	 */
-	public function  __construct() {
+	public function __construct() {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 
 		//Add in the checkboxes
@@ -60,7 +60,6 @@ class Product_Downloads_Edit {
 			$param_array['file_dates'] = '';
 			$param_array['variation_file_dates'] = array();
 
-
 			// Get the Product
 			if ( isset( $_GET['post'] ) ) {
 
@@ -69,14 +68,13 @@ class Product_Downloads_Edit {
 				$product = wc_get_product( $_GET['post'] );
 
 				//Check if its a variation or not.
-				if( $product->is_type( 'variable' ) ) {
+				if ( $product->is_type( 'variable' ) ) {
 
 					$variations = $product->get_children();
 
 					foreach ( $variations as $vid ) {
 						$param_array['variation_file_dates'][ $vid ] = get_post_meta( $vid, '_wc_variation_file_dates', true );
 					}
-
 				}
 			}
 
@@ -114,8 +112,8 @@ class Product_Downloads_Edit {
 			array(
 				'id'            => '_enable_subscription_download_filtering',
 				'wrapper_class' => 'show_if_downloadable show_if_subscription',
-				'label'         => __('Enable', 'wc-product-download-dates' ),
-				'description'   => __('Download Date Filtering', 'wc-product-download-dates' )
+				'label'         => __( 'Enable', 'wc-product-download-dates' ),
+				'description'   => __( 'Download Date Filtering', 'wc-product-download-dates' )
 			)
 		);
 	}

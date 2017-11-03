@@ -10,7 +10,7 @@
  */
 namespace woocommerce;
 
-defined( 'ABSPATH' ) or exit;
+defined( 'ABSPATH' ) || exit;
 
 
 /*
