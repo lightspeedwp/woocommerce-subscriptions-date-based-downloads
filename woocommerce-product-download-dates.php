@@ -17,10 +17,10 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-define('WC_PDD_PATH',  plugin_dir_path( __FILE__ ) );
-define('WC_PDD_CORE',  __FILE__ );
-define('WC_PDD_URL',  plugin_dir_url( __FILE__ ) );
-define('WC_PDD_VER',  '1.0.0' );
+define( 'WC_PDD_PATH',  plugin_dir_path( __FILE__ ) );
+define( 'WC_PDD_CORE',  __FILE__ );
+define( 'WC_PDD_URL',  plugin_dir_url( __FILE__ ) );
+define( 'WC_PDD_VER',  '1.0.0' );
 
 require_once( WC_PDD_PATH . 'classes/class-product-download-dates.php' );
 $wc_product_download_dates = new \woocommerce\Product_Download_Dates();

@@ -107,13 +107,13 @@ class Product_Downloads_Edit {
 	/**
 	 * Enable checkbox
 	 */
-	public function enable_checkbox( ) {
+	public function enable_checkbox() {
 		woocommerce_wp_checkbox(
 			array(
 				'id'            => '_enable_subscription_download_filtering',
 				'wrapper_class' => 'show_if_downloadable show_if_subscription',
 				'label'         => __( 'Enable', 'wc-product-download-dates' ),
-				'description'   => __( 'Download Date Filtering', 'wc-product-download-dates' )
+				'description'   => __( 'Download Date Filtering', 'wc-product-download-dates' ),
 			)
 		);
 	}
@@ -125,7 +125,7 @@ class Product_Downloads_Edit {
 		woocommerce_wp_checkbox(
 			array(
 				'id'            => '_enable_subscription_download_filtering[' . $variation->ID . ']',
-				'label'         => __(' Enable Download Date Filtering', 'wc-product-download-dates' ),
+				'label'         => __( ' Enable Download Date Filtering', 'wc-product-download-dates' ),
 				'description'   => '',
 				'value'         => get_post_meta( $variation->ID, '_enable_subscription_download_filtering', true ),
 			)

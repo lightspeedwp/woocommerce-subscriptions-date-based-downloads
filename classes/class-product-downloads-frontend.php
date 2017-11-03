@@ -64,16 +64,16 @@ class Product_Downloads_Frontend {
 	 *
 	 * @since 1.0.0
 	 */
-	public function  __construct() {
+	public function __construct() {
 
 		add_action( 'woocommerce_customer_get_downloadable_products', array(
 			$this,
-			'get_downloadable_products'
+			'get_downloadable_products',
 		), 20, 1 );
 
 		add_action( 'woocommerce_get_item_downloads', array(
 			$this,
-			'get_item_downloadable_products'
+			'get_item_downloadable_products',
 		), 20, 3 );
 
 	}
@@ -91,12 +91,12 @@ class Product_Downloads_Frontend {
 		if ( class_exists( 'WC_Subscriptions' ) && ! empty( $downloads ) ) {
 			$unset_array = false;
 
-			foreach( $downloads as $download_key => $download ) {
+			foreach ( $downloads as $download_key => $download ) {
 
 				$product = wc_get_product( $download['product_id'] );
 				$enable_filter = get_post_meta( $download['product_id'], '_enable_subscription_download_filtering', true );
 
-				if ( 'yes' === $enable_filter && $product->is_downloadable() && $product->is_type( array( 'subscription_variation', 'subscription' ) ) ){
+				if ( 'yes' === $enable_filter && $product->is_downloadable() && $product->is_type( array( 'subscription_variation', 'subscription' ) ) ) {
 
 					//Get the array of downloadable files, so we can match the date
 					$this->index_downloads( $product );
@@ -141,7 +141,7 @@ class Product_Downloads_Frontend {
 
 			$enable_filter = get_post_meta( $product_id, '_enable_subscription_download_filtering', true );
 
-			if ( 'yes' === $enable_filter && $product->is_downloadable() && $product->is_type( array( 'subscription_variation', 'subscription' ) ) ){
+			if ( 'yes' === $enable_filter && $product->is_downloadable() && $product->is_type( array( 'subscription_variation', 'subscription' ) ) ) {
 
 				$unset_array = array();
 
@@ -164,9 +164,7 @@ class Product_Downloads_Frontend {
 						unset( $files[ $unset ] );
 					}
 				}
-
 			}
-
 		}
 
 		return $files;
@@ -183,13 +181,11 @@ class Product_Downloads_Frontend {
 		if ( ! isset( $this->downloadable_files[ $product->get_id() ] ) ) {
 			$downloads = $product->get_downloads();
 			$counter = 0;
-			foreach( $downloads as $download ) {
+			foreach ( $downloads as $download ) {
 				$this->downloadable_files[ $product->get_id() ][ $counter ] = $download->get_name();
 				$counter++;
 			}
-
 		}
-
 	}
 
 	/**
