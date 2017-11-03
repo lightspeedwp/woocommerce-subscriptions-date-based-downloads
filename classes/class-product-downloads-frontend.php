@@ -32,32 +32,32 @@ class Product_Downloads_Frontend {
 	/*
 	 * Holds the downloadable files from the actual product.
 	 */
-	var $downloadable_files = false;
+	protected $downloadable_files = false;
 
 	/*
 	 * Holds the downloadable files dates.
 	 */
-	var $file_dates = false;
+	protected $file_dates = false;
 
 	/*
 	 * Holds the array of the customers orders
 	 */
-	var $orders = false;
+	protected $orders = false;
 
 	/*
 	 * Holds the array of the customers ordersby product ID
 	 */
-	var $orders_by_product = false;
+	protected $orders_by_product = false;
 
 	/*
 	 * Holds the array of subscription intervals by product ID
 	 */
-	var $subscription_intervals = false;
+	protected $subscription_intervals = false;
 
 	/*
 	 * Holds the keys for the downloads we need to unset
 	 */
-	var $unset_array = false;
+	protected $unset_array = false;
 
 	/**
 	 * Initialize and setup the retailer add/edit screen.
