@@ -288,7 +288,7 @@ class Product_Downloads_Frontend {
 					$test_date = $file_date;
 
 					// See which interval we are testing against.
-					switch( $this->subscription_intervals[ $download['product_id'] ]['period'] ){
+					switch ( $this->subscription_intervals[ $download['product_id'] ]['period'] ) {
 
 						case 'day':
 							$test_date = date( 'd', strtotime( $file_date ) );
@@ -327,13 +327,13 @@ class Product_Downloads_Frontend {
 	private function get_file_date_by_name( $key = false, $file_name = false ) {
 		$return = false;
 		if ( false !== $key &&
-		     false !== $file_name &&
-		     false !== $this->file_dates &&
-		     false !== $this->downloadable_files &&
-		     isset( $this->downloadable_files[ $key ] ) &&
-		     is_array( $this->downloadable_files[ $key ] ) ) {
+			false !== $file_name &&
+			false !== $this->file_dates &&
+			false !== $this->downloadable_files &&
+			isset( $this->downloadable_files[ $key ] ) &&
+			is_array( $this->downloadable_files[ $key ] ) ) {
 
-			$index = array_search( $file_name, $this->downloadable_files[ $key ]  );
+			$index = array_search( $file_name, $this->downloadable_files[ $key ] );
 
 			if ( false !== $index &&
 				isset( $this->file_dates[ $key ] ) &&
