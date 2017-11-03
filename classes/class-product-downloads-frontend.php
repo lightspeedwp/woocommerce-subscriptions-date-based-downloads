@@ -224,7 +224,7 @@ class Product_Downloads_Frontend {
 		$order = wc_get_order( $order_id );
 		if ( 'shop_subscription' === $order->get_type() ) {
 
-			$this->subscription_intervals[ $product_id ] = array (
+			$this->subscription_intervals[ $product_id ] = array(
 				'period' => $order->get_billing_period(),
 				'interval' => $order->get_billing_interval(),
 			);

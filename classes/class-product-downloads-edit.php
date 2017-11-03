@@ -84,9 +84,19 @@ class Product_Downloads_Edit {
 	}
 
 	/**
+	 *
 	 * Enqueue the admin scripts for adding in the date field.
+	 *
+	 * @param $post_id
+	 * @param $post
+	 *
+	 * @return bool
 	 */
 	function save_product_meta( $post_id, $post ) {
+
+		if ( ! ( isset( $_POST['woocommerce_meta_nonce'] ) || wp_verify_nonce( sanitize_key( $_POST['woocommerce_meta_nonce'] ), 'woocommerce_save_data' ) ) ) {
+			return false;
+		}
 
 		$file_dates = isset( $_POST['_wc_file_dates'] ) ? wc_clean( $_POST['_wc_file_dates'] ) : array();
 		update_post_meta( $post_id, '_wc_file_dates', implode( ',', $file_dates ) );
@@ -100,6 +110,11 @@ class Product_Downloads_Edit {
 	 * Enqueue the admin scripts for adding in the date field.
 	 */
 	function save_variation_meta( $variation_id, $i ) {
+
+		if ( ! ( isset( $_POST['woocommerce_meta_nonce'] ) || wp_verify_nonce( sanitize_key( $_POST['woocommerce_meta_nonce'] ), 'woocommerce_save_data' ) ) ) {
+			return false;
+		}
+
 		$file_dates = isset( $_POST['_wc_variation_file_dates'][ $variation_id ] ) ? wc_clean( $_POST['_wc_variation_file_dates'][ $variation_id ] ) : array();
 		update_post_meta( $variation_id, '_wc_variation_file_dates', implode( ',', $file_dates ) );
 	}
@@ -137,6 +152,11 @@ class Product_Downloads_Edit {
 	 *
 	 */
 	function save_variation_settings_fields( $post_id ) {
+
+		if ( ! ( isset( $_POST['woocommerce_meta_nonce'] ) || wp_verify_nonce( sanitize_key( $_POST['woocommerce_meta_nonce'] ), 'woocommerce_save_data' ) ) ) {
+			return false;
+		}
+
 		// Checkbox
 		$checkbox = isset( $_POST['_enable_subscription_download_filtering'][ $post_id ] ) ? 'yes' : 'no';
 		update_post_meta( $post_id, '_enable_subscription_download_filtering', $checkbox );
