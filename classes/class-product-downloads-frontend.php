@@ -118,6 +118,11 @@ class Product_Downloads_Frontend {
 			}
 		}
 
+		/*print_r( '<pre>' );
+		print_r( $this->subscription_intervals );
+		print_r( '</pre>' );
+		die();*/
+
 		return $downloads;
 	}
 
@@ -173,7 +178,7 @@ class Product_Downloads_Frontend {
 	/**
 	 * Filters the Downloadable Files by the dates you have orders
 	 *
-	 * @param $product bool | object
+	 * @param $product bool | object \WC_Product()
 	 */
 
 	private function index_downloads( $product = false ) {
@@ -307,6 +312,8 @@ class Product_Downloads_Frontend {
 							break;
 
 					}
+
+					//print_r( $filename );print_r( '-' );print_r( $file_date );print_r( '-' );print_r( $test_date );print_r( '-' );print_r( $dates[ $this->subscription_intervals[ $download['product_id'] ]['period'] ] );print_r('<br />');
 
 					if ( $test_date === $dates[ $this->subscription_intervals[ $download['product_id'] ]['period'] ] ) {
 						$return = true;
