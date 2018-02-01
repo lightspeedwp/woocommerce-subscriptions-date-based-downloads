@@ -71,10 +71,10 @@ class Product_Downloads_Frontend {
 			'get_downloadable_products',
 		), 20, 1 );
 
-		add_action( 'woocommerce_get_item_downloads', array(
+		/*add_action( 'woocommerce_get_item_downloads', array(
 			$this,
 			'get_item_downloadable_products',
-		), 20, 3 );
+		), 20, 3 );*/
 
 	}
 
@@ -87,9 +87,24 @@ class Product_Downloads_Frontend {
 
 	public function get_downloadable_products( $downloads ) {
 
+		//Run through each download
+		//Check if the file date fits in between the "order" ranges you qualify for.
+
+
 		// Run through each of the products
 		if ( class_exists( 'WC_Subscriptions' ) && ! empty( $downloads ) ) {
+
+
+
+			$this->index_valid_subscription_dates();
+
+
+
 			$unset_array = false;
+
+			print_r( '<pre> subscription_intervals' );
+			print_r( $downloads );
+			print_r( '</pre>' );
 
 			foreach ( $downloads as $download_key => $download ) {
 
@@ -118,13 +133,109 @@ class Product_Downloads_Frontend {
 			}
 		}
 
-		/*print_r( '<pre>' );
+		print_r( '<pre> subscription_intervals' );
 		print_r( $this->subscription_intervals );
 		print_r( '</pre>' );
-		die();*/
+		print_r( '<pre> orders_by_product' );
+		print_r( $this->orders_by_product );
+		print_r( '</pre>' );
+		print_r( '<pre> downloadable_files' );
+		print_r( $this->downloadable_files );
+		print_r( '</pre>' );
+		die();
 
 		return $downloads;
 	}
+
+
+	/**
+	 * Sorts the file dates out into an array by Product ID and download index
+	 *
+	 * @param $item_id bool | string
+	 */
+
+	private function index_valid_subscription_dates( $item_id = false ) {
+
+		//Get all of my subscriptions
+		//Get the start date and end date of the subscription if it is active, or on-hold or expired
+		//Get the orders for each of those subscripions and filter by the completed orders.
+		//Get the date of each completed order, this will give us a range of dates to test against.
+		//Format the array so we can find the valid dates by the product_id.
+
+		$subscription_args = array(
+			'subscriptions_per_page' => 100,
+			'paged'                  => 1,
+		);
+
+		if ( false !== $item_id ) {
+			$subscription_args['order_id'] = $item_id;
+		} else {
+			$subscription_args['customer_id'] = wp_get_current_user()->ID;
+		}
+		$my_subscriptions = wcs_get_subscriptions( $subscription_args );
+
+		if ( ! empty ( $my_subscriptions ) ) {
+
+			/**
+			 * Run through each subscription and gather the orders
+			 * @var $subscription \WC_Subscription
+			 */
+
+			foreach ( $my_subscriptions as $sub_id => $subscription ) {
+
+				$period = $subscription->get_billing_period();
+				$interval = $subscription->get_billing_interval();
+				$start_date = $subscription->get_date( 'date_created' );
+				$end_date = $subscription->get_date( 'end' );
+
+				print_r( $sub_id );print_r('-');print_r( $subscription->get_id() );print_r('<br />');
+				print_r( $period );print_r('-');print_r( $interval );print_r('<br />');
+				print_r( $start_date );print_r('-');print_r( $end_date );print_r('<br />');
+
+				$orders = $subscription->get_related_orders('all' );
+
+				if ( ! empty( $orders ) ) {
+
+					/**
+					 * Run through each order and test to see if its completed or processing, if it is then generate a date range to test the file against.
+					 * @var $order \WC_Order
+					 */
+					foreach ( $orders as $order_id => $order ) {
+						print_r( $order_id );print_r('-');print_r( $order->get_status() );print_r('<br />');
+						if ( 'completed' === $order->get_status() || 'processing' === $order->get_status() ) {
+							$this->subscription_intervals[ $sub_id ][] = $this->generate_range_from_date( $order->get_date_paid(), $interval, $period );
+						}
+					}
+				}
+				print_r( '-----------------------------------------------' );print_r('<br />');
+			}
+
+			print_r( '<pre> Subscription Orders' );
+			print_r( $this->subscription_intervals );
+			print_r( '</pre>' );
+		}
+		die();
+
+	}
+
+	/**
+	 * Returns a start and end date for the completed order.
+	 * @param $start_date object \WC_DateTime
+	 * @param $end_date object \WC_DateTime
+	 * @param $interval string
+	 * @param $period string
+	 *
+	 * @return array
+	 */
+	public function generate_range_from_date( $start_date, $interval, $period ) {
+		$return = array();
+		$return['start'] = $start_date;
+		$end_date = clone $start_date;
+		$end_date->modify( '+1 year' );
+		$return['end'] = $end_date;
+		return $return;
+	}
+
 
 	/**
 	 * Filters the Downloadable Files by the dates you have orders
@@ -232,6 +343,7 @@ class Product_Downloads_Frontend {
 			$this->subscription_intervals[ $product_id ] = array(
 				'period' => $order->get_billing_period(),
 				'interval' => $order->get_billing_interval(),
+				'subscription' => $order->get_id(),
 			);
 
 			$related_orders_ids_array = $order->get_related_orders();
@@ -283,7 +395,7 @@ class Product_Downloads_Frontend {
 			isset( $this->orders_by_product[ $download['product_id'] ] ) &&
 			! empty( $this->orders_by_product[ $download['product_id'] ] ) ) {
 
-			//run through the current download products dates
+			//run through the orders testing the subscription dates found.
 			foreach ( $this->orders_by_product[ $download['product_id'] ] as $dates ) {
 
 				//See what the subscription interval is and check if the item is in range.
@@ -318,6 +430,9 @@ class Product_Downloads_Frontend {
 					if ( $test_date === $dates[ $this->subscription_intervals[ $download['product_id'] ]['period'] ] ) {
 						$return = true;
 					}
+
+					apply_filters( 'wc_pdd_has_completed_order', $download, $file_date );
+
 				}
 			}
 		}
