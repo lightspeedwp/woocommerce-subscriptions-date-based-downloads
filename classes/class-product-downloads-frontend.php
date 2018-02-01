@@ -90,59 +90,30 @@ class Product_Downloads_Frontend {
 		//Run through each download
 		//Check if the file date fits in between the "order" ranges you qualify for.
 
-
 		// Run through each of the products
 		if ( class_exists( 'WC_Subscriptions' ) && ! empty( $downloads ) ) {
 
-
-
 			$this->index_valid_subscription_dates();
-
-
 
 			$unset_array = false;
 
-			print_r( '<pre> subscription_intervals' );
-			print_r( $downloads );
-			print_r( '</pre>' );
-
 			foreach ( $downloads as $download_key => $download ) {
 
-				$product = wc_get_product( $download['product_id'] );
-				$enable_filter = get_post_meta( $download['product_id'], '_enable_subscription_download_filtering', true );
-
-				if ( 'yes' === $enable_filter && $product->is_downloadable() && $product->is_type( array( 'subscription_variation', 'subscription' ) ) ) {
-
-					//Get the array of downloadable files, so we can match the date
-					$this->index_downloads( $product );
-					$this->index_dates( $product );
-					$this->index_orders( $download['order_id'], $download['product_id'] );
-
-					//Check if the download has a completed order or not for the date of the current file.
-					if ( ! $this->has_completed_order( $download ) ) {
-						$unset_array[] = $download_key;
-					}
+				//Check if the download has a completed order or not for the date of the current file.
+				if ( ! $this->has_valid_date( $download ) ) {
+					$unset_array[] = $download_key;
 				}
 			}
 
+			//Remove the files that you dont have access to.
 			if ( false !== $unset_array && is_array( $unset_array ) && ! empty( $unset_array ) ) {
-
 				foreach ( $unset_array as $unset ) {
 					unset( $downloads[ $unset ] );
 				}
 			}
 		}
 
-		print_r( '<pre> subscription_intervals' );
-		print_r( $this->subscription_intervals );
-		print_r( '</pre>' );
-		print_r( '<pre> orders_by_product' );
-		print_r( $this->orders_by_product );
-		print_r( '</pre>' );
-		print_r( '<pre> downloadable_files' );
-		print_r( $this->downloadable_files );
-		print_r( '</pre>' );
-		die();
+		$downloads = $this->remove_duplicate_downloads( $downloads );
 
 		return $downloads;
 	}
@@ -180,42 +151,62 @@ class Product_Downloads_Frontend {
 			 * Run through each subscription and gather the orders
 			 * @var $subscription \WC_Subscription
 			 */
-
 			foreach ( $my_subscriptions as $sub_id => $subscription ) {
 
 				$period = $subscription->get_billing_period();
 				$interval = $subscription->get_billing_interval();
-				$start_date = $subscription->get_date( 'date_created' );
-				$end_date = $subscription->get_date( 'end' );
 
-				print_r( $sub_id );print_r('-');print_r( $subscription->get_id() );print_r('<br />');
-				print_r( $period );print_r('-');print_r( $interval );print_r('<br />');
-				print_r( $start_date );print_r('-');print_r( $end_date );print_r('<br />');
-
-				$orders = $subscription->get_related_orders('all' );
-
-				if ( ! empty( $orders ) ) {
+				$items = $subscription->get_items();
+				if ( ! empty( $items ) ) {
+					$product_ids = array();
 
 					/**
-					 * Run through each order and test to see if its completed or processing, if it is then generate a date range to test the file against.
-					 * @var $order \WC_Order
+					 * Run through each item looking for a downloadable subscription
+					 * @var $item \WC_Order_Item_Product
 					 */
-					foreach ( $orders as $order_id => $order ) {
-						print_r( $order_id );print_r('-');print_r( $order->get_status() );print_r('<br />');
-						if ( 'completed' === $order->get_status() || 'processing' === $order->get_status() ) {
-							$this->subscription_intervals[ $sub_id ][] = $this->generate_range_from_date( $order->get_date_paid(), $interval, $period );
+					foreach ( $items as $item ) {
+
+						if ( $item instanceof \WC_Order_Item_Product ) {
+
+							$product = $item->get_product();
+							$enable_filter = get_post_meta( $item->get_product_id(), '_enable_subscription_download_filtering', true );
+
+							// Only check the download if the filter is enabled, and the product is a Downloadable Subscription.
+							if ( 'yes' === $enable_filter && $product->is_downloadable() && $product->is_type( array(
+									'subscription_variation',
+									'subscription'
+								) ) ) {
+								$product_ids[] = $item->get_product_id();
+								$this->index_downloads( $product );
+								$this->index_dates( $product );
+							}
+						}
+					}
+
+					if ( ! empty( $product_ids ) ) {
+
+						/**
+						 * This is where we store the completed order dates against the product ID.
+						 */
+						$orders = $subscription->get_related_orders('all' );
+						if ( ! empty( $orders ) ) {
+
+							/**
+							 * Run through each order and test to see if its completed or processing, if it is then generate a date range to test the file against.
+							 * @var $order \WC_Order
+							 */
+							foreach ( $orders as $order_id => $order ) {
+								if ( '' !== ( $date_paid = $order->get_date_paid() ) && null !== $date_paid ) {
+									foreach ( $product_ids as $pid ) {
+										$this->subscription_intervals[ $pid ][] = $this->generate_range_from_date( $date_paid, $interval, $period );
+									}
+								}
+							}
 						}
 					}
 				}
-				print_r( '-----------------------------------------------' );print_r('<br />');
 			}
-
-			print_r( '<pre> Subscription Orders' );
-			print_r( $this->subscription_intervals );
-			print_r( '</pre>' );
 		}
-		die();
-
 	}
 
 	/**
@@ -331,49 +322,6 @@ class Product_Downloads_Frontend {
 	}
 
 	/**
-	 * Sorts the file dates out into an array by Product ID and download index
-	 *
-	 * @param $order_id bool | string
-	 */
-
-	private function index_orders( $order_id = false, $product_id = false ) {
-		$order = wc_get_order( $order_id );
-		if ( 'shop_subscription' === $order->get_type() ) {
-
-			$this->subscription_intervals[ $product_id ] = array(
-				'period' => $order->get_billing_period(),
-				'interval' => $order->get_billing_interval(),
-				'subscription' => $order->get_id(),
-			);
-
-			$related_orders_ids_array = $order->get_related_orders();
-
-			if ( ! empty( $related_orders_ids_array ) ) {
-
-				foreach ( $related_orders_ids_array as $related_order ) {
-
-					if ( ! isset( $this->orders[ $related_order ] ) ) {
-
-						$order = wc_get_order( $related_order );
-						if ( 'completed' === $order->get_status() || 'processing' === $order->get_status() ) {
-
-							$dates = array(
-								'day'   => get_the_date( 'd', $related_order ),
-								'week'  => get_the_date( 'W', $related_order ),
-								'month' => get_the_date( 'm', $related_order ),
-								'year'  => get_the_date( 'Y', $related_order ),
-							);
-							$this->orders[ $related_order ] = $dates;
-
-							$this->orders_by_product[ $product_id ][] = $this->orders[ $related_order ];
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/**
 	 * Filters the Downloadable Files by the dates you have orders
 	 *
 	 * @param $download boolean | object
@@ -381,62 +329,50 @@ class Product_Downloads_Frontend {
 	 * @return boolean
 	 */
 
-	private function has_completed_order( $download = false, $filename = false ) {
+	private function has_valid_date( $download = false, $filename = false ) {
 		$return = false;
 
 		if ( false === $filename ) {
 			$filename = $download['file']['name'];
 		}
-
 		$file_date = $this->get_file_date_by_name( $download['product_id'], $filename );
+		$file_datestamp = strtotime( $file_date );
 
 		if ( false !== $file_date &&
-			is_array( $this->orders_by_product ) &&
-			isset( $this->orders_by_product[ $download['product_id'] ] ) &&
-			! empty( $this->orders_by_product[ $download['product_id'] ] ) ) {
+			is_array( $this->subscription_intervals ) &&
+			isset( $this->subscription_intervals[ $download['product_id'] ] ) &&
+			! empty( $this->subscription_intervals[ $download['product_id'] ] ) ) {
 
-			//run through the orders testing the subscription dates found.
-			foreach ( $this->orders_by_product[ $download['product_id'] ] as $dates ) {
+			foreach ( $this->subscription_intervals[ $download['product_id'] ] as $dates ) {
+				$dates = apply_filters( 'wc_pdd_has_valid_date', $dates, $file_date, $download );
 
-				//See what the subscription interval is and check if the item is in range.
-				if ( isset( $this->subscription_intervals[ $download['product_id'] ] ) &&
-					isset( $this->subscription_intervals[ $download['product_id'] ]['period'] ) ) {
-
-					$test_date = $file_date;
-
-					// See which interval we are testing against.
-					switch ( $this->subscription_intervals[ $download['product_id'] ]['period'] ) {
-
-						case 'day':
-							$test_date = date( 'd', strtotime( $file_date ) );
-							break;
-
-						case 'week':
-							$test_date = date( 'W', strtotime( $file_date ) );
-							break;
-
-						case 'month':
-							$test_date = date( 'm', strtotime( $file_date ) );
-							break;
-
-						case 'year':
-							$test_date = date( 'Y', strtotime( $file_date ) );
-							break;
-
-					}
-
-					//print_r( $filename );print_r( '-' );print_r( $file_date );print_r( '-' );print_r( $test_date );print_r( '-' );print_r( $dates[ $this->subscription_intervals[ $download['product_id'] ]['period'] ] );print_r('<br />');
-
-					if ( $test_date === $dates[ $this->subscription_intervals[ $download['product_id'] ]['period'] ] ) {
-						$return = true;
-					}
-
-					apply_filters( 'wc_pdd_has_completed_order', $download, $file_date );
-
+				if ( $dates['start']->getTimestamp() <= $file_datestamp && $file_datestamp <= $dates['end']->getTimestamp() ) {
+					$return = true;
 				}
 			}
 		}
 		return $return;
+	}
+
+	/**
+	 * Remove Duplicate Downloads
+	 * @param $downloads
+	 */
+	private function remove_duplicate_downloads( $downloads ) {
+		$new_downloads = $downloads;
+		if ( ! empty( $downloads ) ) {
+			$download_sorter = array();
+			foreach ( $downloads as $download_index => $download ) {
+				$download_sorter[ $download['download_id'] ] = $download_index;
+			}
+
+			$new_downloads = array();
+			foreach ( $download_sorter as $download_id => $download_index ) {
+				$new_downloads[] = $downloads[ $download_index ];
+			}
+		}
+
+		return $new_downloads;
 	}
 
 	/**
