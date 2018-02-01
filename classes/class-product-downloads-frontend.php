@@ -66,16 +66,64 @@ class Product_Downloads_Frontend {
 	 */
 	public function __construct() {
 
-		add_action( 'woocommerce_customer_get_downloadable_products', array(
+		add_filter( 'woocommerce_customer_get_downloadable_products', array(
 			$this,
 			'get_downloadable_products',
 		), 20, 1 );
 
-		add_action( 'woocommerce_get_item_downloads', array(
+		add_filter( 'woocommerce_get_item_downloads', array(
 			$this,
 			'get_item_downloadable_products',
 		), 20, 3 );
 
+		add_filter( 'woocommerce_subscription_item_download_statuses', array(
+			$this,
+			'subscription_item_download_statuses',
+		), 20, 1 );
+
+		add_filter( 'woocommerce_order_is_download_permitted', array(
+			$this,
+			'order_is_download_permitted',
+		), 20, 2 );
+	}
+
+	/**
+	 * Allows on-hold, cancelled or expired subscriptions to view their items.
+	 * @param $statuses
+	 *
+	 * @return array
+	 */
+	public function subscription_item_download_statuses( $statuses ) {
+		$statuses[] = 'on-hold';
+		$statuses[] = 'cancelled';
+		$statuses[] = 'expired';
+		return $statuses;
+	}
+
+	/**
+	 * Aloow all subscriptions to download is they have a payment date.
+	 * @param $allow string
+	 * @param $order object \WC_Order()
+	 *
+	 * @return mixed
+	 */
+	public function order_is_download_permitted( $allow, $order ) {
+		if ( 'shop_subscription' === $order->get_type() ) {
+			$items = $order->get_items();
+			if ( ! empty( $items ) ) {
+				/**
+				 * @var $item \WC_Order_Item_Product()
+				 */
+				foreach ( $items as $item ) {
+					$product       = $item->get_product();
+					$enable_filter = get_post_meta( $item->get_product_id(), '_enable_subscription_download_filtering', true );
+					if ( 'yes' === $enable_filter ) {
+						$allow = true;
+					}
+				}
+			}
+		}
+		return $allow;
 	}
 
 	/**
@@ -94,7 +142,6 @@ class Product_Downloads_Frontend {
 		if ( class_exists( 'WC_Subscriptions' ) && ! empty( $downloads ) ) {
 
 			$this->index_valid_subscription_dates();
-
 			$unset_array = false;
 
 			foreach ( $downloads as $download_key => $download ) {
@@ -112,7 +159,6 @@ class Product_Downloads_Frontend {
 				}
 			}
 		}
-
 		$downloads = $this->remove_duplicate_downloads( $downloads );
 		return $downloads;
 	}
@@ -154,8 +200,7 @@ class Product_Downloads_Frontend {
 				}
 			}
 		}
-
-		//$downloads = $this->remove_duplicate_downloads( $downloads );
+		$downloads = $this->remove_duplicate_downloads( $downloads );
 		return $downloads;
 	}
 
@@ -190,7 +235,7 @@ class Product_Downloads_Frontend {
 			 */
 			foreach ( $my_subscriptions as $sub_id => $subscription ) {
 
-				$period = $subscription->get_billing_period();
+				$period   = $subscription->get_billing_period();
 				$interval = $subscription->get_billing_interval();
 
 				$items = $subscription->get_items();
@@ -205,7 +250,7 @@ class Product_Downloads_Frontend {
 
 						if ( $item instanceof \WC_Order_Item_Product ) {
 
-							$product = $item->get_product();
+							$product       = $item->get_product();
 							$enable_filter = get_post_meta( $item->get_product_id(), '_enable_subscription_download_filtering', true );
 
 							// Only check the download if the filter is enabled, and the product is a Downloadable Subscription.
@@ -225,7 +270,7 @@ class Product_Downloads_Frontend {
 						/**
 						 * This is where we store the completed order dates against the product ID.
 						 */
-						$orders = $subscription->get_related_orders('all' );
+						$orders = $subscription->get_related_orders( 'all' );
 						if ( ! empty( $orders ) ) {
 
 							/**
@@ -327,8 +372,11 @@ class Product_Downloads_Frontend {
 				$filename = $download['name'];
 			}
 		}
-		$file_date = $this->get_file_date_by_name( $download['product_id'], $filename );
-		$file_datestamp = strtotime( $file_date . ' 23:59' );
+
+		$file_date_formatted = $this->get_file_date_by_name( $download['product_id'], $filename );
+		$file_date = new \WC_DateTime();
+		$file_date->setTimestamp( strtotime( $file_date_formatted ) );
+		$file_date->modify( '10:00:00' );
 
 		if ( false !== $file_date &&
 			is_array( $this->subscription_intervals ) &&
@@ -337,7 +385,16 @@ class Product_Downloads_Frontend {
 
 			foreach ( $this->subscription_intervals[ $download['product_id'] ] as $dates ) {
 
-				if ( $dates['start']->getTimestamp() <= $file_datestamp && $file_datestamp <= $dates['end']->getTimestamp() ) {
+				/*print_r($download['product_id'] . ' ' .$filename );
+				print_r(' ');
+				print_r($file_date->getTimestamp());print_r( ' ' );print_r($file_date->format( 'Y-m-d h:i:s') );
+				print_r(' ');
+				print_r($dates['start']->getTimestamp() );print_r(' ');print_r($dates['start']->format( 'Y-m-d h:i:s') );
+				print_r(' ');
+				print_r($dates['end']->getTimestamp() );print_r(' ');print_r($dates['end']->format( 'Y-m-d h:i:s') );
+				print_r('<br />');*/
+
+				if ( $dates['start']->getTimestamp() <= $file_date->getTimestamp() && $file_date->getTimestamp() <= $dates['end']->getTimestamp() ) {
 					$return = true;
 				}
 			}
@@ -355,10 +412,10 @@ class Product_Downloads_Frontend {
 		if ( ! empty( $downloads ) ) {
 			$download_sorter = array();
 			foreach ( $downloads as $download_index => $download ) {
-				if ( isset( $download['download_id'] ) ) {
-					$did = $download['download_id'];
+				if ( isset( $download['download_name'] ) ) {
+					$did = $download['download_name'];
 				} else {
-					$did = $download['id'];
+					$did = $download['name'];
 				}
 				$download_sorter[ $did ] = $download_index;
 			}
