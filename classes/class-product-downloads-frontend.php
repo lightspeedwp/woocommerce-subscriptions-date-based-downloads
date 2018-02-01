@@ -114,7 +114,6 @@ class Product_Downloads_Frontend {
 		}
 
 		$downloads = $this->remove_duplicate_downloads( $downloads );
-
 		return $downloads;
 	}
 
@@ -156,7 +155,7 @@ class Product_Downloads_Frontend {
 			}
 		}
 
-		$downloads = $this->remove_duplicate_downloads( $downloads );
+		//$downloads = $this->remove_duplicate_downloads( $downloads );
 		return $downloads;
 	}
 
@@ -168,14 +167,6 @@ class Product_Downloads_Frontend {
 	 */
 
 	private function index_valid_subscription_dates( $item_id = false ) {
-
-		//Get all of my subscriptions
-		//Get the start date and end date of the subscription if it is active, or on-hold or expired
-		//Get the orders for each of those subscripions and filter by the completed orders.
-		//Get the date of each completed order, this will give us a range of dates to test against.
-		//Format the array so we can find the valid dates by the product_id.
-
-
 
 		if ( false !== $item_id ) {
 			$subscription = wcs_get_subscription( $item_id );
@@ -253,6 +244,7 @@ class Product_Downloads_Frontend {
 				}
 			}
 		}
+		$this->subscription_intervals = apply_filters( 'wc_pdd_subscription_intervals', $this->subscription_intervals );
 	}
 
 	/**
@@ -336,7 +328,7 @@ class Product_Downloads_Frontend {
 			}
 		}
 		$file_date = $this->get_file_date_by_name( $download['product_id'], $filename );
-		$file_datestamp = strtotime( $file_date );
+		$file_datestamp = strtotime( $file_date . ' 23:59' );
 
 		if ( false !== $file_date &&
 			is_array( $this->subscription_intervals ) &&
@@ -344,7 +336,6 @@ class Product_Downloads_Frontend {
 			! empty( $this->subscription_intervals[ $download['product_id'] ] ) ) {
 
 			foreach ( $this->subscription_intervals[ $download['product_id'] ] as $dates ) {
-				$dates = apply_filters( 'wc_pdd_has_valid_date', $dates, $file_date, $download );
 
 				if ( $dates['start']->getTimestamp() <= $file_datestamp && $file_datestamp <= $dates['end']->getTimestamp() ) {
 					$return = true;
@@ -357,6 +348,7 @@ class Product_Downloads_Frontend {
 	/**
 	 * Remove Duplicate Downloads
 	 * @param $downloads
+	 * @return array
 	 */
 	private function remove_duplicate_downloads( $downloads ) {
 		$new_downloads = $downloads;
