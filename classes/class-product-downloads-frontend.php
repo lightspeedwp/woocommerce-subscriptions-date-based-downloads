@@ -71,10 +71,10 @@ class Product_Downloads_Frontend {
 			'get_downloadable_products',
 		), 20, 1 );
 
-		/*add_action( 'woocommerce_get_item_downloads', array(
+		add_action( 'woocommerce_get_item_downloads', array(
 			$this,
 			'get_item_downloadable_products',
-		), 20, 3 );*/
+		), 20, 3 );
 
 	}
 
@@ -118,6 +118,48 @@ class Product_Downloads_Frontend {
 		return $downloads;
 	}
 
+	/**
+	 * Filters the Downloadable Files by the dates you have orders
+	 *
+	 * @param   $downloads array
+	 * @param   $item \WC_Order_Item_Product()
+	 * @param   $order \WC_Order()
+	 *
+	 * @return array
+	 */
+	public function get_item_downloadable_products( $downloads, $item, $order ) {
+
+		// Run through each of the products
+		if ( class_exists( 'WC_Subscriptions' ) && ! empty( $downloads ) ) {
+
+			$this->index_valid_subscription_dates( $order->get_id() );
+
+			$unset_array = false;
+
+			foreach ( $downloads as $download_key => $download ) {
+
+				if ( ! isset( $download['product_id'] ) ) {
+					$download['product_id'] = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
+				}
+
+				//Check if the download has a completed order or not for the date of the current file.
+				if ( ! $this->has_valid_date( $download ) ) {
+					$unset_array[] = $download_key;
+				}
+			}
+
+			//Remove the files that you dont have access to.
+			if ( false !== $unset_array && is_array( $unset_array ) && ! empty( $unset_array ) ) {
+				foreach ( $unset_array as $unset ) {
+					unset( $downloads[ $unset ] );
+				}
+			}
+		}
+
+		$downloads = $this->remove_duplicate_downloads( $downloads );
+		return $downloads;
+	}
+
 
 	/**
 	 * Sorts the file dates out into an array by Product ID and download index
@@ -133,17 +175,21 @@ class Product_Downloads_Frontend {
 		//Get the date of each completed order, this will give us a range of dates to test against.
 		//Format the array so we can find the valid dates by the product_id.
 
-		$subscription_args = array(
-			'subscriptions_per_page' => 100,
-			'paged'                  => 1,
-		);
+
 
 		if ( false !== $item_id ) {
-			$subscription_args['order_id'] = $item_id;
+			$subscription = wcs_get_subscription( $item_id );
+			if ( false !== $subscription && '' !== $subscription ) {
+				$my_subscriptions[ $item_id ] = $subscription;
+			}
 		} else {
-			$subscription_args['customer_id'] = wp_get_current_user()->ID;
+			$subscription_args = array(
+				'subscriptions_per_page' => 100,
+				'paged'                  => 1,
+				'customer_id'            => WC()->customer->get_id(),
+			);
+			$my_subscriptions = wcs_get_subscriptions( $subscription_args );
 		}
-		$my_subscriptions = wcs_get_subscriptions( $subscription_args );
 
 		if ( ! empty ( $my_subscriptions ) ) {
 
@@ -227,56 +273,6 @@ class Product_Downloads_Frontend {
 		return $return;
 	}
 
-
-	/**
-	 * Filters the Downloadable Files by the dates you have orders
-	 *
-	 * @param $files array
-	 * @parm $download_obj object
-	 * @param  $order object WC_Order()
-	 *
-	 * @return array
-	 */
-
-	public function get_item_downloadable_products( $files, $download_obj, $order ) {
-
-		if ( class_exists( 'WC_Subscriptions' ) && ! empty( $files ) ) {
-
-			$product    = $download_obj->get_product();
-			$order      = $download_obj->get_order();
-			$product_id = $download_obj->get_variation_id() ? $download_obj->get_variation_id() : $download_obj->get_product_id();
-
-			$enable_filter = get_post_meta( $product_id, '_enable_subscription_download_filtering', true );
-
-			if ( 'yes' === $enable_filter && $product->is_downloadable() && $product->is_type( array( 'subscription_variation', 'subscription' ) ) ) {
-
-				$unset_array = array();
-
-				//Get the array of downloadable files, so we can match the date
-				$this->index_downloads( $product );
-				$this->index_dates( $product );
-				$this->index_orders( $order->get_id(), $product_id );
-
-				foreach ( $files as $file_key => $file_array ) {
-					//Check if the download has a completed order or not for the date of the current file.
-					$file_array['product_id'] = $product_id;
-
-					if ( ! $this->has_completed_order( $file_array, $file_array['name'] ) ) {
-						$unset_array[] = $file_key;
-					}
-				}
-
-				if ( false !== $unset_array && is_array( $unset_array ) ) {
-					foreach ( $unset_array as $unset ) {
-						unset( $files[ $unset ] );
-					}
-				}
-			}
-		}
-
-		return $files;
-	}
-
 	/**
 	 * Filters the Downloadable Files by the dates you have orders
 	 *
@@ -333,7 +329,11 @@ class Product_Downloads_Frontend {
 		$return = false;
 
 		if ( false === $filename ) {
-			$filename = $download['file']['name'];
+			if ( is_array( $download['file'] ) ) {
+				$filename = $download['file']['name'];
+			} else {
+				$filename = $download['name'];
+			}
 		}
 		$file_date = $this->get_file_date_by_name( $download['product_id'], $filename );
 		$file_datestamp = strtotime( $file_date );
@@ -363,7 +363,12 @@ class Product_Downloads_Frontend {
 		if ( ! empty( $downloads ) ) {
 			$download_sorter = array();
 			foreach ( $downloads as $download_index => $download ) {
-				$download_sorter[ $download['download_id'] ] = $download_index;
+				if ( isset( $download['download_id'] ) ) {
+					$did = $download['download_id'];
+				} else {
+					$did = $download['id'];
+				}
+				$download_sorter[ $did ] = $download_index;
 			}
 
 			$new_downloads = array();
