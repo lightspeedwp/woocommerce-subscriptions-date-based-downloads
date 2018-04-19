@@ -256,7 +256,7 @@ class Product_Downloads_Frontend {
 							if ( 'yes' === $enable_filter && $product->is_downloadable() && $product->is_type( array(
 									'subscription_variation',
 									'subscription',
-								) ) ) {
+							) ) ) {
 								$product_ids[] = $item->get_product_id();
 								$this->index_downloads( $product );
 								$this->index_dates( $product );
@@ -277,7 +277,9 @@ class Product_Downloads_Frontend {
 							 * @var $order \WC_Order
 							 */
 							foreach ( $orders as $order_id => $order ) {
-								if ( '' !== ( $date_paid = $order->get_date_paid() ) && null !== $date_paid ) { // phpcs:ignore
+								if ( 
+									'' !== ( $date_paid = $order->get_date_paid() ) && null !== $date_paid 
+								) {
 									foreach ( $product_ids as $pid ) {
 										$this->subscription_intervals[ $pid ][] = $this->generate_range_from_date( $date_paid, $interval, $period );
 									}
