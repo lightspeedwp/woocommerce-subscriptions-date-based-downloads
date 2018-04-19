@@ -1,6 +1,6 @@
 <?php
 /*
- * Plugin Name: WooCommerce Product Download Dates
+ * Plugin Name: WooCommerce Subscription Date Based Downloads
  * Plugin URI:  https://www.lsdev.biz/
  * Description: Allows you to set a custom date for a downloadable file for WooCommerce.
  * Version:     1.0.0

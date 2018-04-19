@@ -2,7 +2,7 @@
 /**
  * Frontend Filters
  *
- * @package   WooCommerce Product Download Dates
+ * @package   WooCommerce Subscription Date Based Downloads
  * @author    LightSpeed
  * @license   GPL-3.0+
  * @link
