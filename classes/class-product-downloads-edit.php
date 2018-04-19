@@ -33,11 +33,11 @@ class Product_Downloads_Edit {
 	public function __construct() {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 
-		//Add in the checkboxes
+		// Add in the checkboxes.
 		add_action( 'woocommerce_product_options_general_product_data', array( $this, 'enable_checkbox' ) );
 		add_action( 'woocommerce_product_after_variable_attributes', array( $this, 'variation_settings_fields' ), 10, 3 );
 
-		//Save Custom Field Data
+		// Save Custom Field Data.
 		add_action( 'woocommerce_save_product_variation', array( $this, 'save_variation_meta' ), 30, 2 );
 		add_action( 'woocommerce_process_product_meta', array( $this, 'save_product_meta' ), 30, 2 );
 
@@ -55,19 +55,19 @@ class Product_Downloads_Edit {
 			wp_register_script( 'wc_pdd_edit_admin_js', WC_PDD_URL . '/assets/js/wc-pdd-edit.min.js', array( 'jquery' ), WC_PDD_VER );
 			wp_enqueue_script( 'wc_pdd_edit_admin_js' );
 
-			//Set the columns for the archives
+			// Set the columns for the archives.
 			$param_array['placeholder'] = esc_attr__( 'File date', 'wc-product-download-dates' );
 			$param_array['file_dates'] = '';
 			$param_array['variation_file_dates'] = array();
 
-			// Get the Product
+			// Get the Product.
 			if ( isset( $_GET['post'] ) ) {
 
 				$param_array['file_dates']  = get_post_meta( get_the_ID(), '_wc_file_dates', true );
 
 				$product = wc_get_product( $_GET['post'] );
 
-				//Check if its a variation or not.
+				// Check if its a variation or not.
 				if ( $product->is_type( 'variable' ) ) {
 
 					$variations = $product->get_children();
@@ -101,7 +101,7 @@ class Product_Downloads_Edit {
 		$file_dates = isset( $_POST['_wc_file_dates'] ) ? wc_clean( $_POST['_wc_file_dates'] ) : array();
 		update_post_meta( $post_id, '_wc_file_dates', implode( ',', $file_dates ) );
 
-		// Checkbox
+		// Checkbox.
 		$woocommerce_checkbox = isset( $_POST['_enable_subscription_download_filtering'] ) ? 'yes' : 'no';
 		update_post_meta( $post_id, '_enable_subscription_download_filtering', $woocommerce_checkbox );
 	}
@@ -157,7 +157,7 @@ class Product_Downloads_Edit {
 			return false;
 		}
 
-		// Checkbox
+		// Checkbox.
 		$checkbox = isset( $_POST['_enable_subscription_download_filtering'][ $post_id ] ) ? 'yes' : 'no';
 		update_post_meta( $post_id, '_enable_subscription_download_filtering', $checkbox );
 	}

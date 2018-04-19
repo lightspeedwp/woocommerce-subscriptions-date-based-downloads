@@ -135,10 +135,9 @@ class Product_Downloads_Frontend {
 
 	public function get_downloadable_products( $downloads ) {
 
-		//Run through each download
-		//Check if the file date fits in between the "order" ranges you qualify for.
-
-		// Run through each of the products
+		// Run through each download
+		// Check if the file date fits in between the "order" ranges you qualify for.
+		// Run through each of the products.
 		if ( class_exists( 'WC_Subscriptions' ) && ! empty( $downloads ) ) {
 
 			$this->index_valid_subscription_dates();
@@ -146,13 +145,13 @@ class Product_Downloads_Frontend {
 
 			foreach ( $downloads as $download_key => $download ) {
 
-				//Check if the download has a completed order or not for the date of the current file.
+				// Check if the download has a completed order or not for the date of the current file.
 				if ( ! $this->has_valid_date( $download ) ) {
 					$unset_array[] = $download_key;
 				}
 			}
 
-			//Remove the files that you dont have access to.
+			// Remove the files that you dont have access to.
 			if ( false !== $unset_array && is_array( $unset_array ) && ! empty( $unset_array ) ) {
 				foreach ( $unset_array as $unset ) {
 					unset( $downloads[ $unset ] );
@@ -174,7 +173,7 @@ class Product_Downloads_Frontend {
 	 */
 	public function get_item_downloadable_products( $downloads, $item, $order ) {
 
-		// Run through each of the products
+		// Run through each of the products.
 		if ( class_exists( 'WC_Subscriptions' ) && ! empty( $downloads ) ) {
 
 			$this->index_valid_subscription_dates( $order->get_id() );
@@ -187,13 +186,13 @@ class Product_Downloads_Frontend {
 					$download['product_id'] = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
 				}
 
-				//Check if the download has a completed order or not for the date of the current file.
+				// Check if the download has a completed order or not for the date of the current file.
 				if ( ! $this->has_valid_date( $download ) ) {
 					$unset_array[] = $download_key;
 				}
 			}
 
-			//Remove the files that you dont have access to.
+			// Remove the files that you dont have access to.
 			if ( false !== $unset_array && is_array( $unset_array ) && ! empty( $unset_array ) ) {
 				foreach ( $unset_array as $unset ) {
 					unset( $downloads[ $unset ] );
@@ -227,7 +226,7 @@ class Product_Downloads_Frontend {
 			$my_subscriptions = wcs_get_subscriptions( $subscription_args );
 		}
 
-		if ( ! empty ( $my_subscriptions ) ) {
+		if ( ! empty( $my_subscriptions ) ) {
 
 			/**
 			 * Run through each subscription and gather the orders
@@ -256,7 +255,7 @@ class Product_Downloads_Frontend {
 							// Only check the download if the filter is enabled, and the product is a Downloadable Subscription.
 							if ( 'yes' === $enable_filter && $product->is_downloadable() && $product->is_type( array(
 									'subscription_variation',
-									'subscription'
+									'subscription',
 								) ) ) {
 								$product_ids[] = $item->get_product_id();
 								$this->index_downloads( $product );
@@ -278,7 +277,7 @@ class Product_Downloads_Frontend {
 							 * @var $order \WC_Order
 							 */
 							foreach ( $orders as $order_id => $order ) {
-								if ( '' !== ( $date_paid = $order->get_date_paid() ) && null !== $date_paid ) {
+								if ( '' !== ( $date_paid = $order->get_date_paid() ) && null !== $date_paid ) { // phpcs:ignore
 									foreach ( $product_ids as $pid ) {
 										$this->subscription_intervals[ $pid ][] = $this->generate_range_from_date( $date_paid, $interval, $period );
 									}
