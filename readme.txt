@@ -8,14 +8,14 @@ Requires PHP: 7.0
 Stable tag: 1.0.0
 License: GPLv3
 
-The WooCommerce Subscription Date Based Downloads make downloadable files in subscription products available for months that your subscribers paid.
+Ideal for selling digital subscriptions that run on a monthly billing cycle. Downloadable files are permanently available for the months when your subscriber's account was active. 
 
 == Description ==
-Make downloadable files in subscription products available for months that your subscribers paid. 
+Ideal for selling digital subscriptions that run on a monthly billing cycle. Downloadable files are permanently available for the months when your subscriber's account was active. 
 
-The extension modifies the downloads filter and bypasses the subscription status. If a subscriber's account was suspended after 2 months, they won't have access to the files added for month 3, but they will continue to have access to month 1 & 2. If they pay in month 4, they have access to month 1, 2 & 4. 
+The extension modifies the downloads page and bypasses the subscription status. Instead it checks in which months your subscriber's account was active or suspended, they won't have access to the files added for months that their account was suspended, but they will continue to have access to files added for months when their account was active. 
 
-They can go back and pay the pending renewal order in Month 3 at any time to gain access to those files. You can set the month that a file is associated with via a calendar and change them whenever you want. Perfect for magazine type subscriptions services, or any subscription site that releases content monthly.
+Subscribers can go back and pay the pending renewal orders at any time to gain access to files they missed. You can set the month that a file is associated with via a calendar and change them whenever you want. Perfect for magazine type subscriptions services, or any subscription site that releases content monthly.
 
 = Support =
 We offer premium support for this plugin. Premium support that can be purchased via [lsdev.biz](https://www.lsdev.biz/).
