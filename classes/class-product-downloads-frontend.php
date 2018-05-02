@@ -373,6 +373,11 @@ class Product_Downloads_Frontend {
 		}
 
 		$file_date_formatted = $this->get_file_date_by_name( $download['product_id'], $filename );
+		//Allow files with no dates to be shown
+		if ( '' === $file_date_formatted ) {
+			return true;
+		}		
+		
 		$file_date = new \WC_DateTime();
 		$file_date->setTimestamp( strtotime( $file_date_formatted ) );
 		$file_date->modify( '10:00:00' );
