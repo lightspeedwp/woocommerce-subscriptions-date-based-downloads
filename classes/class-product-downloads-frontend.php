@@ -277,7 +277,13 @@ class Product_Downloads_Frontend {
 							 * @var $order \WC_Order
 							 */
 							foreach ( $orders as $order_id => $order ) {
-								if ( '' !== ( $date_paid = $order->get_date_paid() ) && null !== $date_paid ) {
+								if ( 'completed' === $order->get_status() || 'processing' === $order->get_status() ) {
+									$date_paid = $order->get_date_completed();
+									if ( '' === $date_paid || null === $date_paid ) {
+										$date_paid = $order->get_date_created();
+									}
+								}
+								if ( '' !== $date_paid && null !== $date_paid ) {
 									foreach ( $product_ids as $pid ) {
 										$this->subscription_intervals[ $pid ][] = $this->generate_range_from_date( $date_paid, $interval, $period );
 									}
