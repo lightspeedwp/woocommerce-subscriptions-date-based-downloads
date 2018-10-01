@@ -40,6 +40,11 @@ class Product_Downloads_Frontend {
 	protected $file_dates = false;
 
 	/*
+	 * Holds the downloadable files dates.
+	 */
+	protected $file_end_dates = false;
+
+	/*
 	 * Holds the array of the customers orders
 	 */
 	protected $orders = false;
@@ -356,6 +361,34 @@ class Product_Downloads_Frontend {
 				$file_dates = explode( ',', $file_dates );
 				$this->file_dates[ $product->get_id() ] = $file_dates;
 			}
+
+			if ( isset( $_GET['debug'] ) && 1989 === $product->get_id() ) {
+				print_r( '<pre>Indexed Dates' );
+				print_r( $this->file_dates );
+				print_r( '</pre>' );
+			}
+		}
+
+		//Get the end dates
+		if ( ! isset( $this->file_end_dates[ $product->get_id() ] ) ) {
+
+			//Check what type of subscription to grab.
+			$meta_key = '_wc_file_dates_end';
+			if ( $product->is_type( 'subscription_variation' ) ) {
+				$meta_key = '_wc_variation_file_dates_end';
+			}
+			$file_dates = get_post_meta( $product->get_id(), $meta_key , true );
+
+			if ( false !== $file_dates ) {
+				$file_dates = explode( ',', $file_dates );
+				$this->file_end_dates[ $product->get_id() ] = $file_dates;
+			}
+
+			if ( isset( $_GET['debug'] ) && 1989 === $product->get_id() ) {
+				print_r( '<pre>Indexed Dates' );
+				print_r( $this->file_end_dates );
+				print_r( '</pre>' );
+			}
 		}
 	}
 
@@ -382,29 +415,73 @@ class Product_Downloads_Frontend {
 		//Allow files with no dates to be shown
 		if ( '' === $file_date_formatted ) {
 			return true;
-		}		
-		
+		}
 		$file_date = new \WC_DateTime();
 		$file_date->setTimestamp( strtotime( $file_date_formatted ) );
 		$file_date->modify( '10:00:00' );
+
+		//Set the end dates
+		$file_end_date_formatted = $this->get_file_end_date_by_name( $download['product_id'], $filename );
+		$file_end_date = new \WC_DateTime();
+
+		//Allow files with no dates to be shown
+		if ( '' === $file_end_date_formatted ) {
+			$file_end_date_formatted = $file_date_formatted;
+			$file_end_date->setTimestamp( strtotime( $file_end_date_formatted ) );
+			$file_end_date->modify( '+6 Months' );
+		} else {
+			$file_end_date->setTimestamp( strtotime( $file_end_date_formatted ) );
+		}
+		$file_date->modify( '10:00:00' );
+
+		if ( isset( $_GET['debug'] ) && 1989 === $download['product_id'] ) {
+			print_r( '<pre>' );
+			print_r( $download['product_id'] . ' ' . $filename );
+			print_r( ' (' );
+			print_r( $file_date_formatted );
+			print_r( ' ' );
+			print_r( $file_date->format( 'Y-m-d h:i:s' ) );
+			print_r( ') (' );
+			print_r( $file_date_formatted );
+			print_r( ' ' );
+			print_r( $file_end_date->format( 'Y-m-d h:i:s' ) );
+			print_r( ')</pre>' );
+		}
 
 		if ( false !== $file_date &&
 			is_array( $this->subscription_intervals ) &&
 			isset( $this->subscription_intervals[ $download['product_id'] ] ) &&
 			! empty( $this->subscription_intervals[ $download['product_id'] ] ) ) {
 
+			if ( isset( $_GET['debug'] ) && 1989 === $download['product_id'] ) {
+				print_r( '<pre>' );
+				print_r( $this->subscription_intervals[ $download['product_id'] ] );
+				print_r( ')</pre>' );
+			}
+
 			foreach ( $this->subscription_intervals[ $download['product_id'] ] as $dates ) {
 
-				/*print_r($download['product_id'] . ' ' .$filename );
-				print_r(' ');
-				print_r($file_date->getTimestamp());print_r( ' ' );print_r($file_date->format( 'Y-m-d h:i:s') );
-				print_r(' ');
-				print_r($dates['start']->getTimestamp() );print_r(' ');print_r($dates['start']->format( 'Y-m-d h:i:s') );
-				print_r(' ');
-				print_r($dates['end']->getTimestamp() );print_r(' ');print_r($dates['end']->format( 'Y-m-d h:i:s') );
-				print_r('<br />');*/
+				/*if ( isset( $_GET['debug'] ) ) {
+					print_r( '<pre>' );
+					print_r( $download['product_id'] . ' ' . $filename );
+					print_r( ' ' );
+					print_r( $file_date->getTimestamp() );
+					print_r( ' ' );
+					print_r( $file_date->format( 'Y-m-d h:i:s' ) );
+					print_r( ' ' );
+					print_r( $dates['start']->getTimestamp() );
+					print_r( ' ' );
+					print_r( $dates['start']->format( 'Y-m-d h:i:s' ) );
+					print_r( ' ' );
+					print_r( $dates['end']->getTimestamp() );
+					print_r( ' ' );
+					print_r( $dates['end']->format( 'Y-m-d h:i:s' ) );
+					print_r( '<br />' );
+					print_r( '</pre>' );
+				}*/
 
-				if ( $dates['start']->getTimestamp() <= $file_date->getTimestamp() && $file_date->getTimestamp() <= $dates['end']->getTimestamp() ) {
+				if ( ( $dates['start']->getTimestamp() <= $file_date->getTimestamp() && $file_date->getTimestamp() <= $dates['end']->getTimestamp() ) ||
+				     ( $dates['start']->getTimestamp() <= $file_end_date->getTimestamp() && $file_end_date->getTimestamp() <= $dates['end']->getTimestamp() )) {
 					$return = true;
 				}
 			}
@@ -462,6 +539,34 @@ class Product_Downloads_Frontend {
 				is_array( $this->file_dates[ $key ] ) ) {
 
 				$return = $this->file_dates[ $key ][ $index ];
+			}
+		}
+		return $return;
+	}
+
+	/**
+	 * Runs through the file names array and select the date
+	 *
+	 * @param $key string | boolean
+	 * @param $file_name string | boolean
+	 * @return string | false
+	 */
+	private function get_file_end_date_by_name( $key = false, $file_name = false ) {
+		$return = false;
+		if ( false !== $key &&
+		     false !== $file_name &&
+		     false !== $this->file_end_dates &&
+		     false !== $this->downloadable_files &&
+		     isset( $this->downloadable_files[ $key ] ) &&
+		     is_array( $this->downloadable_files[ $key ] ) ) {
+
+			$index = array_search( $file_name, $this->downloadable_files[ $key ] );
+
+			if ( false !== $index &&
+			     isset( $this->file_end_dates[ $key ] ) &&
+			     is_array( $this->file_end_dates[ $key ] ) ) {
+
+				$return = $this->file_end_dates[ $key ][ $index ];
 			}
 		}
 		return $return;
