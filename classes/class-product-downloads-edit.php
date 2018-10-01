@@ -104,6 +104,9 @@ class Product_Downloads_Edit {
 		$file_dates = isset( $_POST['_wc_file_dates'] ) ? wc_clean( $_POST['_wc_file_dates'] ) : array();
 		update_post_meta( $post_id, '_wc_file_dates', implode( ',', $file_dates ) );
 
+		$file_dates_end = isset( $_POST['_wc_file_dates_end'] ) ? wc_clean( $_POST['_wc_file_dates_end'] ) : array();
+		update_post_meta( $post_id, '_wc_file_dates_end', implode( ',', $file_dates_end ) );
+
 		// Checkbox.
 		$woocommerce_checkbox = isset( $_POST['_enable_subscription_download_filtering'] ) ? 'yes' : 'no';
 		update_post_meta( $post_id, '_enable_subscription_download_filtering', $woocommerce_checkbox );
@@ -120,6 +123,9 @@ class Product_Downloads_Edit {
 
 		$file_dates = isset( $_POST['_wc_variation_file_dates'][ $variation_id ] ) ? wc_clean( $_POST['_wc_variation_file_dates'][ $variation_id ] ) : array();
 		update_post_meta( $variation_id, '_wc_variation_file_dates', implode( ',', $file_dates ) );
+
+		$file_dates_end = isset( $_POST['_wc_variation_file_dates_end'][ $variation_id ] ) ? wc_clean( $_POST['_wc_variation_file_dates_end'][ $variation_id ] ) : array();
+		update_post_meta( $variation_id, '_wc_variation_file_dates_end', implode( ',', $file_dates_end ) );
 	}
 
 	/**
