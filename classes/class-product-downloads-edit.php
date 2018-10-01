@@ -52,28 +52,31 @@ class Product_Downloads_Edit {
 
 		if ( ( isset( $_GET['post'] ) && 'product' === get_post_type( $_GET['post'] ) ) || isset( $_GET['post_type'] ) && 'product' === $_GET['post_type'] ) {
 
-			wp_register_script( 'wc_pdd_edit_admin_js', WC_PDD_URL . '/assets/js/wc-pdd-edit.min.js', array( 'jquery' ), WC_PDD_VER );
+			wp_register_script( 'wc_pdd_edit_admin_js', WC_PDD_URL . '/assets/js/wc-pdd-edit.js', array( 'jquery' ), WC_PDD_VER );
 			wp_enqueue_script( 'wc_pdd_edit_admin_js' );
 
-			// Set the columns for the archives.
-			$param_array['placeholder'] = esc_attr__( 'File date', 'wc-product-download-dates' );
+			//Set the columns for the archives
+			$param_array['placeholder'] = esc_attr__( 'Start date', 'wc-product-download-dates' );
+			$param_array['placeholder_end'] = esc_attr__( 'End date', 'wc-product-download-dates' );
 			$param_array['file_dates'] = '';
 			$param_array['variation_file_dates'] = array();
 
-			// Get the Product.
+			// Get the Product
 			if ( isset( $_GET['post'] ) ) {
 
+				//get the first file date
 				$param_array['file_dates']  = get_post_meta( get_the_ID(), '_wc_file_dates', true );
+				$param_array['file_dates_end']  = get_post_meta( get_the_ID(), '_wc_file_dates_end', true );
 
 				$product = wc_get_product( $_GET['post'] );
-
-				// Check if its a variation or not.
+				//Check if its a variation or not.
 				if ( $product->is_type( 'variable' ) ) {
 
 					$variations = $product->get_children();
 
 					foreach ( $variations as $vid ) {
 						$param_array['variation_file_dates'][ $vid ] = get_post_meta( $vid, '_wc_variation_file_dates', true );
+						$param_array['variation_file_dates_end'][ $vid ] = get_post_meta( $vid, '_wc_variation_file_dates_end', true );
 					}
 				}
 			}

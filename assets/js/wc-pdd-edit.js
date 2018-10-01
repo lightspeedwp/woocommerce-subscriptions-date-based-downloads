@@ -6,17 +6,18 @@ var WC_PDD = {
 
         //Add in the date text field
         var date_field = '<input type="text" class="file_date input_text" placeholder="' + wc_pdd_edit_params.placeholder + '" name="_wc_file_dates[]" value="">';
+        var date_field_end = '<input type="text" class="file_date input_text" placeholder="' + wc_pdd_edit_params.placeholder_end + '" name="_wc_file_dates_end[]" value="">';
 
         if ( 0 !== jQuery( download_box_selector ).length ) {
-            this.addDateField( download_box_selector, date_field );
-            this.replaceNewDateField( download_box_selector, date_field );
+            this.addDateField( download_box_selector, date_field, date_field_end );
+            this.replaceNewDateField( download_box_selector, date_field, date_field_end );
             this.runDatepicker();
         }
 
         this.loadDatesForVariations();
     },
 
-    addDateField: function ( selector, date_field ) {
+    addDateField: function ( selector, date_field, date_field_end ) {
         var counter = 0;
 
         var file_dates = wc_pdd_edit_params.file_dates.split(',');
@@ -29,12 +30,25 @@ var WC_PDD = {
             }
             counter++;
         });
+
+        counter = 0;
+        var file_dates_end = wc_pdd_edit_params.file_dates_end.split(',');
+        jQuery( selector ).find( '.file_url' ).each( function() {
+            jQuery( this ).append( date_field_end );
+
+            if ( undefined !== file_dates_end[ counter ] ) {
+                jQuery( this ).find( '.file_date' ).val( file_dates_end[ counter ] );
+            }
+            counter++;
+        });
     },
 
-    replaceNewDateField: function ( selector, date_field ) {
+    replaceNewDateField: function ( selector, date_field, date_field_end ) {
+
         var add_new_html = jQuery( selector ).find( '.button.insert' ).attr( 'data-row' );
         add_new_html = jQuery( add_new_html );
         add_new_html.find( '.file_name' ).append( date_field );
+        add_new_html.find( '.file_url' ).append( date_field_end );
 
         jQuery( selector ).find( '.button.insert' ).attr( 'data-row', '<tr>' + add_new_html.html() + '</tr>' )
 
@@ -51,7 +65,7 @@ var WC_PDD = {
     runDatepicker: function() {
         // Initiate the Date Picker
         jQuery( document.body ).on( 'wc-init-datepickers', function() {
-            jQuery( '.file_name .file_date' ).datepicker({
+            jQuery( '.file_name .file_date, .file_url .file_date' ).datepicker({
                 dateFormat: 'yy-mm-dd',
                 numberOfMonths: 1,
                 showButtonPanel: true
