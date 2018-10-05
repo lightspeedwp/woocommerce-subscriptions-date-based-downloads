@@ -164,8 +164,92 @@ class Product_Downloads_Frontend {
 			}
 		}
 		$downloads = $this->remove_duplicate_downloads( $downloads );
+		$downloads = $this->sort_downloadable_products( $downloads );
 		return $downloads;
 	}
+
+	function sort_downloads($a, $b)
+	{
+
+		$a_index = array_search ( $a , $this->downloadable_files[ $this->current_product_id ] );
+		if ( '' === $a_index || false === $a_index ) {
+			$a_index = 0;
+		}
+		$b_index = array_search ( $b , $this->downloadable_files[ $this->current_product_id ] );
+		if ( '' === $b_index || false === $b_index ) {
+			$b_index = 0;
+		}
+
+		/*print_r( '<pre>prod_ID' );
+		print_r( $this->current_download_id );
+		print_r( '</pre>' );
+
+		print_r( '<pre>$a' );
+		print_r( $a );
+		print_r( ' - ' );
+		print_r( $a_index );
+		print_r( '</pre>' );
+
+		print_r( '<pre>$b' );
+		print_r( $b );
+		print_r( ' - ' );
+		print_r( $b_index );
+		print_r( '</pre>' );*/
+
+		if ( $a_index == $b_index ) {
+			return 0;
+		}
+		return ( $a_index < $b_index ) ? -1 : 1;
+	}
+
+	/**
+	 * Remove Duplicate Downloads
+	 * @param $downloads
+	 * @return array
+	 */
+	private function sort_downloadable_products( $downloads ) {
+
+		if ( ! empty( $downloads ) ) {
+			//first, sort them into their products
+
+			$sorting_hat = array();
+
+			foreach( $downloads as $download_key => $download ) {
+				$sorting_hat[ $download['product_id'] ][ $download_key ] = $download['download_name'];
+			}
+
+			$new_hat = array();
+
+			//the sort each product by the original file index.
+			foreach( $sorting_hat as $hat_product => $hat ) {
+				$this->current_product_id = $hat_product;
+				uasort( $hat, array( $this, 'sort_downloads' ) );
+				$new_hat[ $hat_product ] = $hat;
+				$this->current_product_id = false;
+			}
+
+
+			if ( ! empty( $new_hat ) ) {
+				$new_downloads = array();
+
+				foreach( $new_hat as $hat_key => $hat_values ) {
+					if ( ! empty( $hat_values ) ) {
+						foreach( $hat_values as $hat_value_key => $hat_value ) {
+							$new_downloads[] = $downloads[ $hat_value_key ];
+						}
+					}
+				}
+
+				if ( ! empty( $new_downloads ) ) {
+					$downloads = $new_downloads;
+				}
+			}
+
+		}
+
+		return $downloads;
+	}
+
 
 	/**
 	 * Filters the Downloadable Files by the dates you have orders
@@ -205,6 +289,7 @@ class Product_Downloads_Frontend {
 			}
 		}
 		$downloads = $this->remove_duplicate_downloads( $downloads );
+		$downloads = $this->sort_downloadable_products( $downloads );
 		return $downloads;
 	}
 
@@ -270,29 +355,25 @@ class Product_Downloads_Frontend {
 					}
 
 					if ( ! empty( $product_ids ) ) {
+						$date_start = $subscription->get_date( 'date_created' );
+						$date_start_obj = new \WC_DateTime();
+						$date_start_obj->modify( $date_start );
 
-						/**
-						 * This is where we store the completed order dates against the product ID.
-						 */
-						$orders = $subscription->get_related_orders( 'all' );
-						if ( ! empty( $orders ) ) {
+						$date_end = $subscription->get_date( 'end' );
+						$date_end_obj = new \WC_DateTime();
+						$date_end_obj->modify( $date_end );
 
-							/**
-							 * Run through each order and test to see if its completed or processing, if it is then generate a date range to test the file against.
-							 * @var $order \WC_Order
-							 */
-							foreach ( $orders as $order_id => $order ) {
-								if ( 'completed' === $order->get_status() || 'processing' === $order->get_status() ) {
-									$date_paid = $order->get_date_completed();
-									if ( '' === $date_paid || null === $date_paid ) {
-										$date_paid = $order->get_date_created();
-									}
-								}
-								if ( '' !== $date_paid && null !== $date_paid ) {
-									foreach ( $product_ids as $pid ) {
-										$this->subscription_intervals[ $pid ][] = $this->generate_range_from_date( $date_paid, $interval, $period );
-									}
-								}
+						/*print_r( '<pre>Subscription Dates' );
+						print_r( $date_start );
+						print_r( ' - ' );
+						print_r( $date_start );
+						print_r( '</pre>' );*/
+
+						foreach ( $product_ids as $pid ) {
+							if ( '' === $date_end || false === $date_end ) {
+								$this->subscription_intervals[ $pid ][] = $this->generate_range_from_date( $date_start, $interval, $period );
+							} else {
+								$this->subscription_intervals[ $pid ][] = array( 'start' => $date_start_obj, 'end' => $date_end_obj );
 							}
 						}
 					}
@@ -362,11 +443,11 @@ class Product_Downloads_Frontend {
 				$this->file_dates[ $product->get_id() ] = $file_dates;
 			}
 
-			if ( isset( $_GET['debug'] ) && 1989 === $product->get_id() ) {
+			/*if ( isset( $_GET['debug'] ) && 1989 === $product->get_id() ) {
 				print_r( '<pre>Indexed Dates' );
 				print_r( $this->file_dates );
 				print_r( '</pre>' );
-			}
+			}*/
 		}
 
 		//Get the end dates
@@ -384,11 +465,11 @@ class Product_Downloads_Frontend {
 				$this->file_end_dates[ $product->get_id() ] = $file_dates;
 			}
 
-			if ( isset( $_GET['debug'] ) && 1989 === $product->get_id() ) {
+			/*if ( isset( $_GET['debug'] ) && 1989 === $product->get_id() ) {
 				print_r( '<pre>Indexed Dates' );
 				print_r( $this->file_end_dates );
 				print_r( '</pre>' );
-			}
+			}*/
 		}
 	}
 
@@ -434,7 +515,7 @@ class Product_Downloads_Frontend {
 		}
 		$file_date->modify( '10:00:00' );
 
-		if ( isset( $_GET['debug'] ) && 1989 === $download['product_id'] ) {
+		/*if ( isset( $_GET['debug'] ) && 1989 === $download['product_id'] ) {
 			print_r( '<pre>' );
 			print_r( $download['product_id'] . ' ' . $filename );
 			print_r( ' (' );
@@ -446,18 +527,18 @@ class Product_Downloads_Frontend {
 			print_r( ' ' );
 			print_r( $file_end_date->format( 'Y-m-d h:i:s' ) );
 			print_r( ')</pre>' );
-		}
+		}*/
 
 		if ( false !== $file_date &&
 			is_array( $this->subscription_intervals ) &&
 			isset( $this->subscription_intervals[ $download['product_id'] ] ) &&
 			! empty( $this->subscription_intervals[ $download['product_id'] ] ) ) {
 
-			if ( isset( $_GET['debug'] ) && 1989 === $download['product_id'] ) {
+			/*if ( isset( $_GET['debug'] ) && 1989 === $download['product_id'] ) {
 				print_r( '<pre>' );
 				print_r( $this->subscription_intervals[ $download['product_id'] ] );
 				print_r( ')</pre>' );
-			}
+			}*/
 
 			foreach ( $this->subscription_intervals[ $download['product_id'] ] as $dates ) {
 
