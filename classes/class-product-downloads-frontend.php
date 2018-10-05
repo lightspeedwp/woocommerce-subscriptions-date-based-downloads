@@ -207,7 +207,7 @@ class Product_Downloads_Frontend {
 	 * @param $downloads
 	 * @return array
 	 */
-	private function sort_downloadable_products( $downloads ) {
+	private function sort_downloadable_products( $downloads, $product_id = false ) {
 
 		if ( ! empty( $downloads ) ) {
 			//first, sort them into their products
@@ -215,10 +215,24 @@ class Product_Downloads_Frontend {
 			$sorting_hat = array();
 
 			foreach( $downloads as $download_key => $download ) {
-				$sorting_hat[ $download['product_id'] ][ $download_key ] = $download['download_name'];
+
+				if ( false !== $product_id ) {
+					$sorting_hat[ $product_id ][ $download_key ] = $download['name'];
+				} else {
+					$sorting_hat[ $download['product_id'] ][ $download_key ] = $download['download_name'];
+				}
 			}
 
 			$new_hat = array();
+
+			/*if ( isset( $_GET['debug'] ) ) {
+				print_r( '<pre>' );
+				print_r( $sorting_hat );
+				print_r( '</pre>' );
+				print_r( '<pre>' );
+				print_r( $downloads );
+				print_r( '</pre>' );
+			}*/
 
 			//the sort each product by the original file index.
 			foreach( $sorting_hat as $hat_product => $hat ) {
@@ -263,7 +277,7 @@ class Product_Downloads_Frontend {
 	public function get_item_downloadable_products( $downloads, $item, $order ) {
 
 		// Run through each of the products.
-		if ( class_exists( 'WC_Subscriptions' ) && ! empty( $downloads ) ) {
+		//if ( class_exists( 'WC_Subscriptions' ) && ! empty( $downloads ) ) {
 
 			$this->index_valid_subscription_dates( $order->get_id() );
 
@@ -272,7 +286,7 @@ class Product_Downloads_Frontend {
 			foreach ( $downloads as $download_key => $download ) {
 
 				if ( ! isset( $download['product_id'] ) ) {
-					$download['product_id'] = $item->get_variation_id() ? $item->get_variation_id() : $item->get_product_id();
+					$download['product_id'] = $item->get_product_id();
 				}
 
 				// Check if the download has a completed order or not for the date of the current file.
@@ -287,9 +301,9 @@ class Product_Downloads_Frontend {
 					unset( $downloads[ $unset ] );
 				}
 			}
-		}
+		//}
 		$downloads = $this->remove_duplicate_downloads( $downloads );
-		$downloads = $this->sort_downloadable_products( $downloads );
+		$downloads = $this->sort_downloadable_products( $downloads, $item->get_product_id() );
 		return $downloads;
 	}
 
