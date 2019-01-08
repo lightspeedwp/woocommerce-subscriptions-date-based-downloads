@@ -513,7 +513,7 @@ class Product_Downloads_Frontend {
 		}
 		$file_date = new \WC_DateTime();
 		$file_date->setTimestamp( strtotime( $file_date_formatted ) );
-		$file_date->modify( '10:00:00' );
+		$file_date->modify( '23:59:59' );
 
 		//Set the end dates
 		$file_end_date_formatted = $this->get_file_end_date_by_name( $download['product_id'], $filename );
@@ -527,7 +527,7 @@ class Product_Downloads_Frontend {
 		} else {
 			$file_end_date->setTimestamp( strtotime( $file_end_date_formatted ) );
 		}
-		$file_date->modify( '10:00:00' );
+		$file_end_date->modify( '23:59:59' );
 
 		/*if ( isset( $_GET['debug'] ) && 1989 === $download['product_id'] ) {
 			print_r( '<pre>' );
@@ -559,18 +559,22 @@ class Product_Downloads_Frontend {
 				/*if ( isset( $_GET['debug'] ) ) {
 					print_r( '<pre>' );
 					print_r( $download['product_id'] . ' ' . $filename );
-					print_r( ' ' );
+					print_r( ' | ' );
 					print_r( $file_date->getTimestamp() );
 					print_r( ' ' );
-					print_r( $file_date->format( 'Y-m-d h:i:s' ) );
+					print_r( $file_date->format( 'Y-m-d h:i:s A' ) );
+					print_r( ' | ' );
+					print_r( $file_end_date->getTimestamp() );
 					print_r( ' ' );
+					print_r( $file_end_date->format( 'Y-m-d h:i:s A' ) );
+					print_r( ' | ' );
 					print_r( $dates['start']->getTimestamp() );
 					print_r( ' ' );
-					print_r( $dates['start']->format( 'Y-m-d h:i:s' ) );
-					print_r( ' ' );
+					print_r( $dates['start']->format( 'Y-m-d h:i:s A' ) );
+					print_r( ' | ' );
 					print_r( $dates['end']->getTimestamp() );
 					print_r( ' ' );
-					print_r( $dates['end']->format( 'Y-m-d h:i:s' ) );
+					print_r( $dates['end']->format( 'Y-m-d h:i:s A' ) );
 					print_r( '<br />' );
 					print_r( '</pre>' );
 				}*/
