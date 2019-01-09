@@ -32,15 +32,18 @@ var WC_PDD = {
         });
 
         counter = 0;
-        var file_dates_end = wc_pdd_edit_params.file_dates_end.split(',');
-        jQuery( selector ).find( '.file_url' ).each( function() {
-            jQuery( this ).append( date_field_end );
+		console.log( wc_pdd_edit_params );
+		if ( undefined !== wc_pdd_edit_params.file_dates_end.split ) {
+			var file_dates_end = wc_pdd_edit_params.file_dates_end.split(',');
+			jQuery( selector ).find( '.file_url' ).each( function() {
+				jQuery( this ).append( date_field_end );
 
-            if ( undefined !== file_dates_end[ counter ] ) {
-                jQuery( this ).find( '.file_date' ).val( file_dates_end[ counter ] );
-            }
-            counter++;
-        });
+				if ( undefined !== file_dates_end[ counter ] ) {
+					jQuery( this ).find( '.file_date' ).val( file_dates_end[ counter ] );
+				}
+				counter++;
+			});			
+		}
     },
 
     replaceNewDateField: function ( selector, date_field, date_field_end ) {
