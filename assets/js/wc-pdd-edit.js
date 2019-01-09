@@ -12,6 +12,8 @@ var WC_PDD = {
             this.addDateField( download_box_selector, date_field, date_field_end );
             this.replaceNewDateField( download_box_selector, date_field, date_field_end );
             this.runDatepicker();
+		
+	    this.watchAddItemButton();
         }
 
         this.loadDatesForVariations();
@@ -213,6 +215,16 @@ var WC_PDD = {
 
         });
 
+    },
+    watchAddItemButton: function() {
+        // Trigger the date selector for the new item.
+        jQuery('.button.insert').on('click', function () {
+            console.log('testing');
+            setTimeout(function () {
+                console.log('hey hey');
+                WC_PDD.runDatepicker();
+            }, 50);
+        });
     }
 };
 
