@@ -59,6 +59,7 @@ class Product_Downloads_Edit {
 			$param_array['placeholder'] = esc_attr__( 'Start date', 'wc-product-download-dates' );
 			$param_array['placeholder_end'] = esc_attr__( 'End date', 'wc-product-download-dates' );
 			$param_array['file_dates'] = '';
+			$param_array['file_dates_end'] = '';
 			$param_array['variation_file_dates'] = array();
 
 			// Get the Product
