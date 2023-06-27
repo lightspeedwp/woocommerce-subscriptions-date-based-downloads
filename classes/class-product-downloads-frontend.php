@@ -276,7 +276,12 @@ class Product_Downloads_Frontend {
 	 */
 	public function get_item_downloadable_products( $downloads, $item, $order ) {
 
-		// Run through each of the products.
+		// Only restrict subscription products
+		if ( 'shop_subscription' !== $order->get_type() ) {
+			return $downloads;
+		}
+
+		$order->get_type();
 		//if ( class_exists( 'WC_Subscriptions' ) && ! empty( $downloads ) ) {
 
 			$this->index_valid_subscription_dates( $order->get_id() );
