@@ -1,4 +1,8 @@
 ## Change log
 
+### 1.1.0
+* Fix: Future-dated files are no longer visible to subscribers before the file's release date.
+* Fix: Files assigned to a billing period that predates a subscriber's sign-up date are no longer shown to that subscriber. Access is now granted only when the file's release date falls within the subscriber's active subscription period.
+
 ### 1.0.0
 * First Version

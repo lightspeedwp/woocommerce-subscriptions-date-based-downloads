@@ -1,2 +1,7 @@
 # woocommerce-subscriptions-date-based-downloads
 Ideal for selling digital subscriptions that run on a monthly billing cycle. Downloadable files are permanently available for the months when your subscriber's account was active. The extension modifies the downloads page and bypasses the subscription status. Instead it checks in which months your subscriber's account was active or suspended, they won't have access to the files added for months that their account was suspended, but they will continue to have access to files added for months when their account was active. Subscribers can go back and pay the pending renewal orders at any time to gain access to files they missed. You can set the month that a file is associated with via a calendar and change them whenever you want. Perfect for magazine type subscriptions services, or any subscription site that releases content monthly.
+
+
+## Documentation
+
+- [Download Date Restriction Guide](docs/date-restriction-guide.md) — how date windows work, how to configure them, worked examples, and technical reference.

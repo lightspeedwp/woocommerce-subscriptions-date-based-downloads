@@ -532,6 +532,12 @@ class Product_Downloads_Frontend {
 		}
 		$file_end_date->modify( '23:59:59' );
 
+		// Never expose a file before its release date has passed.
+		$now = new \WC_DateTime();
+		if ( $file_date->getTimestamp() > $now->getTimestamp() ) {
+			return false;
+		}
+
 		/*if ( isset( $_GET['debug'] ) && 1989 === $download['product_id'] ) {
 			print_r( '<pre>' );
 			print_r( $download['product_id'] . ' ' . $filename );
@@ -582,8 +588,11 @@ class Product_Downloads_Frontend {
 					print_r( '</pre>' );
 				}*/
 
-				if ( ( $dates['start']->getTimestamp() <= $file_date->getTimestamp() && $file_date->getTimestamp() <= $dates['end']->getTimestamp() ) ||
-				     ( $dates['start']->getTimestamp() <= $file_end_date->getTimestamp() && $file_end_date->getTimestamp() <= $dates['end']->getTimestamp() )) {
+				// Grant access only when the file's release date falls within the subscription period.
+				// Checking file_start alone (not file_end) prevents files from a prior billing
+				// period bleeding through to subscribers who joined after that period ended.
+				if ( $dates['start']->getTimestamp() <= $file_date->getTimestamp() &&
+				     $file_date->getTimestamp() <= $dates['end']->getTimestamp() ) {
 					$return = true;
 				}
 			}
