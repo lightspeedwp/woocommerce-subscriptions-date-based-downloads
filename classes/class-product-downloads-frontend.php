@@ -180,22 +180,6 @@ class Product_Downloads_Frontend {
 			$b_index = 0;
 		}
 
-		/*print_r( '<pre>prod_ID' );
-		print_r( $this->current_download_id );
-		print_r( '</pre>' );
-
-		print_r( '<pre>$a' );
-		print_r( $a );
-		print_r( ' - ' );
-		print_r( $a_index );
-		print_r( '</pre>' );
-
-		print_r( '<pre>$b' );
-		print_r( $b );
-		print_r( ' - ' );
-		print_r( $b_index );
-		print_r( '</pre>' );*/
-
 		if ( $a_index == $b_index ) {
 			return 0;
 		}
@@ -224,15 +208,6 @@ class Product_Downloads_Frontend {
 			}
 
 			$new_hat = array();
-
-			/*if ( isset( $_GET['debug'] ) ) {
-				print_r( '<pre>' );
-				print_r( $sorting_hat );
-				print_r( '</pre>' );
-				print_r( '<pre>' );
-				print_r( $downloads );
-				print_r( '</pre>' );
-			}*/
 
 			//the sort each product by the original file index.
 			foreach( $sorting_hat as $hat_product => $hat ) {
@@ -380,12 +355,6 @@ class Product_Downloads_Frontend {
 						$date_end_obj = new \WC_DateTime();
 						$date_end_obj->modify( $date_end );
 
-						/*print_r( '<pre>Subscription Dates' );
-						print_r( $date_start );
-						print_r( ' - ' );
-						print_r( $date_start );
-						print_r( '</pre>' );*/
-
 						foreach ( $product_ids as $pid ) {
 							if ( '' === $date_end || false === $date_end ) {
 								$this->subscription_intervals[ $pid ][] = $this->generate_range_from_date( $date_start, $interval, $period );
@@ -459,12 +428,6 @@ class Product_Downloads_Frontend {
 				$file_dates = explode( ',', $file_dates );
 				$this->file_dates[ $product->get_id() ] = $file_dates;
 			}
-
-			/*if ( isset( $_GET['debug'] ) && 1989 === $product->get_id() ) {
-				print_r( '<pre>Indexed Dates' );
-				print_r( $this->file_dates );
-				print_r( '</pre>' );
-			}*/
 		}
 
 		//Get the end dates
@@ -481,12 +444,6 @@ class Product_Downloads_Frontend {
 				$file_dates = explode( ',', $file_dates );
 				$this->file_end_dates[ $product->get_id() ] = $file_dates;
 			}
-
-			/*if ( isset( $_GET['debug'] ) && 1989 === $product->get_id() ) {
-				print_r( '<pre>Indexed Dates' );
-				print_r( $this->file_end_dates );
-				print_r( '</pre>' );
-			}*/
 		}
 	}
 
@@ -532,67 +489,20 @@ class Product_Downloads_Frontend {
 		}
 		$file_end_date->modify( '23:59:59' );
 
-		// Never expose a file before its release date has passed.
-		$now = new \WC_DateTime();
-		if ( $file_date->getTimestamp() > $now->getTimestamp() ) {
-			return false;
-		}
-
-		/*if ( isset( $_GET['debug'] ) && 1989 === $download['product_id'] ) {
-			print_r( '<pre>' );
-			print_r( $download['product_id'] . ' ' . $filename );
-			print_r( ' (' );
-			print_r( $file_date_formatted );
-			print_r( ' ' );
-			print_r( $file_date->format( 'Y-m-d h:i:s' ) );
-			print_r( ') (' );
-			print_r( $file_date_formatted );
-			print_r( ' ' );
-			print_r( $file_end_date->format( 'Y-m-d h:i:s' ) );
-			print_r( ')</pre>' );
-		}*/
+		// Never expose a file before its release date has passed.  
+        $now = new \WC_DateTime();  
+        if ( strtotime( $file_date_formatted ) > $now->getTimestamp() ) {  
+            return false;  
+        }
 
 		if ( false !== $file_date &&
 			is_array( $this->subscription_intervals ) &&
 			isset( $this->subscription_intervals[ $download['product_id'] ] ) &&
 			! empty( $this->subscription_intervals[ $download['product_id'] ] ) ) {
 
-			/*if ( isset( $_GET['debug'] ) && 1989 === $download['product_id'] ) {
-				print_r( '<pre>' );
-				print_r( $this->subscription_intervals[ $download['product_id'] ] );
-				print_r( ')</pre>' );
-			}*/
-
 			foreach ( $this->subscription_intervals[ $download['product_id'] ] as $dates ) {
-
-				/*if ( isset( $_GET['debug'] ) ) {
-					print_r( '<pre>' );
-					print_r( $download['product_id'] . ' ' . $filename );
-					print_r( ' | ' );
-					print_r( $file_date->getTimestamp() );
-					print_r( ' ' );
-					print_r( $file_date->format( 'Y-m-d h:i:s A' ) );
-					print_r( ' | ' );
-					print_r( $file_end_date->getTimestamp() );
-					print_r( ' ' );
-					print_r( $file_end_date->format( 'Y-m-d h:i:s A' ) );
-					print_r( ' | ' );
-					print_r( $dates['start']->getTimestamp() );
-					print_r( ' ' );
-					print_r( $dates['start']->format( 'Y-m-d h:i:s A' ) );
-					print_r( ' | ' );
-					print_r( $dates['end']->getTimestamp() );
-					print_r( ' ' );
-					print_r( $dates['end']->format( 'Y-m-d h:i:s A' ) );
-					print_r( '<br />' );
-					print_r( '</pre>' );
-				}*/
-
-				// Grant access only when the file's release date falls within the subscription period.
-				// Checking file_start alone (not file_end) prevents files from a prior billing
-				// period bleeding through to subscribers who joined after that period ended.
-				if ( $dates['start']->getTimestamp() <= $file_date->getTimestamp() &&
-				     $file_date->getTimestamp() <= $dates['end']->getTimestamp() ) {
+				if ( ( $dates['start']->getTimestamp() <= $file_date->getTimestamp() && $file_date->getTimestamp() <= $dates['end']->getTimestamp() ) ||
+				     ( $dates['start']->getTimestamp() <= $file_end_date->getTimestamp() && $file_end_date->getTimestamp() <= $dates['end']->getTimestamp() )) {
 					$return = true;
 				}
 			}
@@ -682,5 +592,4 @@ class Product_Downloads_Frontend {
 		}
 		return $return;
 	}
-
 }
