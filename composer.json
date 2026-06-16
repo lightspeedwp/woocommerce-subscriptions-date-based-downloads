@@ -10,7 +10,7 @@
         "phpunit/phpunit": "^8.5",
         "wp-coding-standards/wpcs": "^3.0",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
-        "wpackagist-plugin/tour-operator": "^1.4.1",
+        "wpackagist-plugin/tour-operator": "^2.1.1",
         "wpackagist-theme/lsx": "^3.0",
         "phpcompatibility/phpcompatibility-wp": "^2.1.0",
         "roave/security-advisories": "dev-master"
