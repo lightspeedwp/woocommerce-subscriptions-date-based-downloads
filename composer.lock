@@ -2964,15 +2964,15 @@
         },
         {
             "name": "wpackagist-plugin/tour-operator",
-            "version": "2.1.1",
+            "version": "2.2",
             "source": {
                 "type": "svn",
                 "url": "https://plugins.svn.wordpress.org/tour-operator/",
-                "reference": "tags/2.1.1"
+                "reference": "trunk"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://downloads.wordpress.org/plugin/tour-operator.2.1.1.zip"
+                "url": "https://downloads.wordpress.org/plugin/tour-operator.zip?timestamp=1785416633"
             },
             "require": {
                 "composer/installers": "^1.0 || ^2.0"
